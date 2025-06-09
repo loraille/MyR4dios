@@ -61,15 +61,21 @@ export default function HomeScreen() {
     ? stations.filter(station => station.genre === selectedGenre)
     : stations;
 
-  const handleStationPress = (station: RadioStation) => {
+  const handleStationPress = (station: RadioStation, index: number) => {
     router.push({
       pathname: '/player',
-      params: { station: JSON.stringify(station) }
+      params: {
+        stations: JSON.stringify(filteredStations),
+        currentIndex: index,
+      },
     });
   };
 
-  const renderItem = ({ item }: { item: RadioStation }) => (
-    <TouchableOpacity style={styles.itemContainer} onPress={() => handleStationPress(item)}>
+  const renderItem = ({ item, index }: { item: RadioStation; index: number }) => (
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() => handleStationPress(item, index)}
+    >
       <View style={styles.stationImageContainer}>
         <Image 
           source={{ uri: item.image }} 

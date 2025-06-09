@@ -3,8 +3,9 @@ import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -18,13 +19,17 @@ interface RadioStation {
 }
 
 export default function PlayerScreen() {
-  const params = useLocalSearchParams();
-  const soundRef = React.useRef<Audio.Sound | null>(null);
-  const [currentStation, setCurrentStation] = useState<RadioStation | null>(null);
+  const params = useLocalSearchParams<{ stations: string; currentIndex: string }>();
+  const { stations: stationsJson, currentIndex: currentIndexJson } = params;
+
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const [stations, setStations] = useState<RadioStation[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [volume, setVolume] = useState(1.0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isChangingStation = React.useRef(false);
+  const isChangingStation = useRef(false);
+  const pagerRef = useRef<PagerView>(null);
 
   const stopCurrentSound = useCallback(async () => {
     if (soundRef.current) {
@@ -80,7 +85,6 @@ export default function PlayerScreen() {
         }
       });
 
-      setCurrentStation(station);
       setIsPlaying(true);
     } catch (error) {
       console.error('Error playing station:', error);
@@ -93,27 +97,31 @@ export default function PlayerScreen() {
   }, [volume, stopCurrentSound]);
 
   useEffect(() => {
-    const stationParam = Array.isArray(params.station)
-      ? params.station[0]
-      : params.station;
-    if (stationParam) {
+    if (stationsJson && currentIndexJson) {
       try {
-        const station = JSON.parse(stationParam) as RadioStation;
-        if (station._id !== currentStation?._id) {
-          playStation(station);
-        }
+        const parsedStations = JSON.parse(stationsJson) as RadioStation[];
+        const parsedIndex = parseInt(currentIndexJson, 10);
+        setStations(parsedStations);
+        setCurrentIndex(parsedIndex);
+        playStation(parsedStations[parsedIndex]);
       } catch (e) {
         console.error('Failed to parse station data:', e);
         setError('Invalid station data');
       }
     }
-  }, [params.station, currentStation, playStation]);
+  }, [stationsJson, currentIndexJson]);
 
   useEffect(() => {
     return () => {
       stopCurrentSound();
     };
   }, [stopCurrentSound]);
+
+  const handlePageSelected = (e: { nativeEvent: { position: number } }) => {
+    const newIndex = e.nativeEvent.position;
+    setCurrentIndex(newIndex);
+    playStation(stations[newIndex]);
+  };
 
   const togglePlayPause = async () => {
     if (isChangingStation.current || !soundRef.current) {
@@ -145,71 +153,85 @@ export default function PlayerScreen() {
     }
   };
 
-  if (!currentStation) {
+  if (!stations.length) {
     return (
       <ThemedView style={styles.centered}>
-        <ThemedText>Select a station from the home screen to start playing</ThemedText>
+        <ThemedText>Loading stations...</ThemedText>
       </ThemedView>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      {error && (
-        <View style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-        </View>
-      )}
-      <View style={styles.nowPlayingContainer}>
-        <View style={styles.nowPlayingImageContainer}>
-          <Image
-            source={{ uri: currentStation.image }}
-            style={styles.nowPlayingImage}
-            resizeMode="cover"
-            onError={(e) => console.log('Image load error:', e)}
-          />
-        </View>
-        <ThemedText type="subtitle">Now Playing</ThemedText>
-        <ThemedText style={styles.stationName}>{currentStation.name}</ThemedText>
-        <ThemedText style={styles.genreText}>{currentStation.genre}</ThemedText>
-        
-        <View style={styles.controlsContainer}>
-          <TouchableOpacity 
-            style={styles.playPauseButton} 
-            onPress={togglePlayPause}
-          >
-            <Ionicons 
-              name={isPlaying ? 'pause' : 'play'} 
-              size={32} 
-              color="#0a7ea4" 
-            />
-          </TouchableOpacity>
-          
-          <View style={styles.volumeContainer}>
-            <Ionicons name="volume-low" size={20} color="#666" />
-            <Slider
-              style={styles.volumeSlider}
-              minimumValue={0}
-              maximumValue={1}
-              value={volume}
-              onValueChange={handleVolumeChange}
-              minimumTrackTintColor="#0a7ea4"
-              maximumTrackTintColor="#ccc"
-              thumbTintColor="#0a7ea4"
-            />
-            <Ionicons name="volume-high" size={20} color="#666" />
+    <PagerView
+      ref={pagerRef}
+      style={styles.pagerView}
+      initialPage={currentIndex}
+      onPageSelected={handlePageSelected}
+    >
+      {stations.map((station) => (
+        <ThemedView key={station._id} style={styles.container}>
+          {error && (
+            <View style={styles.errorContainer}>
+              <ThemedText style={styles.errorText}>{error}</ThemedText>
+            </View>
+          )}
+          <View style={styles.nowPlayingContainer}>
+            <View style={styles.nowPlayingImageContainer}>
+              <Image
+                source={{ uri: station.image }}
+                style={styles.nowPlayingImage}
+                resizeMode="cover"
+                onError={(e) => console.log('Image load error:', e)}
+              />
+            </View>
+            <ThemedText type="subtitle">Now Playing</ThemedText>
+            <ThemedText style={styles.stationName}>{station.name}</ThemedText>
+            <ThemedText style={styles.genreText}>{station.genre}</ThemedText>
+
+            <View style={styles.controlsContainer}>
+              <TouchableOpacity
+                style={styles.playPauseButton}
+                onPress={togglePlayPause}
+              >
+                <Ionicons
+                  name={isPlaying ? 'pause' : 'play'}
+                  size={32}
+                  color="#0a7ea4"
+                />
+              </TouchableOpacity>
+
+              <View style={styles.volumeContainer}>
+                <Ionicons name="volume-low" size={20} color="#666" />
+                <Slider
+                  style={styles.volumeSlider}
+                  minimumValue={0}
+                  maximumValue={1}
+                  value={volume}
+                  onValueChange={handleVolumeChange}
+                  minimumTrackTintColor="#0a7ea4"
+                  maximumTrackTintColor="#ccc"
+                  thumbTintColor="#0a7ea4"
+                />
+                <Ionicons name="volume-high" size={20} color="#666" />
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-    </ThemedView>
+        </ThemedView>
+      ))}
+    </PagerView>
   );
 }
 
 const styles = StyleSheet.create({
+  pagerView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centered: {
     flex: 1,
