@@ -1,50 +1,48 @@
-# Bienvenue dans votre application Expo 👋
+# MyR4dios
 
-Ceci est un projet [Expo](https://expo.dev) créé avec [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+MyR4dios est une application mobile de streaming radio développée avec React Native et Expo. Elle permet aux utilisateurs d'écouter leurs stations de radio préférées en direct.
+
+## Fonctionnalités
+
+- **Lecture en direct :** Écoutez des flux radio en temps réel.
+- **Contrôle du volume :** Ajustez le volume directement depuis l'application.
+- **Interface simple :** Une interface utilisateur épurée pour une navigation facile.
+- **Affichage des informations de la station :** Affiche le nom, le genre et l'image de la station en cours de lecture.
 
 ## Pour commencer
 
-1.  Installez les dépendances
+1.  **Installez les dépendances :**
 
     ```bash
     npm install
     ```
 
-2.  Démarrez l'application
-
+2.  **Démarrez l'application :**
     ```bash
     npx expo start
     ```
+    Cela lancera le serveur de développement Metro. Vous pouvez ensuite exécuter l'application sur un appareil physique en utilisant l'application Expo Go ou dans un simulateur iOS/émulateur Android.
 
-Dans la sortie, vous trouverez des options pour ouvrir l'application dans :
+## Structure du projet
 
-- un [build de développement](https://docs.expo.dev/develop/development-builds/introduction/)
-- un [émulateur Android](https://docs.expo.dev/workflow/android-studio-emulator/)
-- un [simulateur iOS](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), un bac à sable limité pour essayer le développement d'applications avec Expo
+Le projet est organisé comme suit :
 
-Vous pouvez commencer à développer en modifiant les fichiers dans le répertoire **app**. Ce projet utilise le [routage basé sur les fichiers](https://docs.expo.dev/router/introduction).
+- **/app**: Contient la logique de navigation et les écrans de l'application.
+  - **/(tabs)**: Définit la navigation par onglets.
+    - `_layout.tsx`: Configuration de la navigation par onglets.
+    - `index.tsx`: L'écran d'accueil affichant la liste des stations.
+    - `player.tsx`: L'écran du lecteur audio.
+  - `_layout.tsx`: La mise en page racine de l'application.
+  - `+not-found.tsx`: Écran affiché pour les routes introuvables.
+- **/assets**: Contient les polices et les images statiques.
+- **/components**: Contient les composants React réutilisables.
+- **/constants**: Contient les constantes utilisées dans l'application, comme les couleurs.
+- **/hooks**: Contient les hooks React personnalisés.
 
-## Obtenir un projet vierge
+## Scripts
 
-Quand vous êtes prêt, exécutez :
+- `npm run reset-project`: Réinitialise le projet à un état vierge en déplaçant le code de démarrage vers `app-example`.
 
-```bash
-npm run reset-project
-```
+## Contribuer
 
-Cette commande déplacera le code de démarrage dans le répertoire **app-example** et créera un répertoire **app** vide où vous pourrez commencer à développer.
-
-## En savoir plus
-
-Pour en savoir plus sur le développement de votre projet avec Expo, consultez les ressources suivantes :
-
-- [Documentation Expo](https://docs.expo.dev/) : Apprenez les bases ou approfondissez des sujets avancés avec nos [guides](https://docs.expo.dev/guides).
-- [Tutoriel Apprendre Expo](https://docs.expo.dev/tutorial/introduction/) : Suivez un tutoriel étape par étape où vous créerez un projet qui fonctionne sur Android, iOS et le web.
-
-## Rejoignez la communauté
-
-Rejoignez notre communauté de développeurs créant des applications universelles.
-
-- [Expo sur GitHub](https://github.com/expo/expo) : Consultez notre plateforme open source et contribuez.
-- [Communauté Discord](https://chat.expo.dev) : Discutez avec les utilisateurs d'Expo et posez des questions.
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
